@@ -237,6 +237,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) (*Res
 		} else {
 			err = json.NewDecoder(resp.Body).Decode(v)
 			if err != nil {
+				println("Blah")
 				return nil, err
 			}
 		}
