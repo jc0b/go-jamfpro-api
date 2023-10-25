@@ -84,11 +84,11 @@ type BuildingUpdateResponse struct {
 	Country        string `json:"country,omitempty"`
 }
 
-func (b BuildingsServiceOp) List(ctx context.Context) ([]Building, *Response, error) {
+func (b *BuildingsServiceOp) List(ctx context.Context) ([]Building, *Response, error) {
 	return b.list(ctx)
 }
 
-func (b BuildingsServiceOp) GetByID(ctx context.Context, i int) (*Building, *Response, error) {
+func (b *BuildingsServiceOp) GetByID(ctx context.Context, i int) (*Building, *Response, error) {
 	path := buildingsBasePath + "/" + strconv.Itoa(i)
 
 	req, err := b.client.NewRequest(ctx, http.MethodGet, path, nil)
@@ -105,7 +105,7 @@ func (b BuildingsServiceOp) GetByID(ctx context.Context, i int) (*Building, *Res
 	return &building, resp, err
 }
 
-func (b BuildingsServiceOp) GetByName(ctx context.Context, name string) (*Building, *Response, error) {
+func (b *BuildingsServiceOp) GetByName(ctx context.Context, name string) (*Building, *Response, error) {
 	buildings, _, err := b.list(ctx)
 	var id string
 	if err != nil {
@@ -132,7 +132,7 @@ func (b BuildingsServiceOp) GetByName(ctx context.Context, name string) (*Buildi
 	return building, resp, err
 }
 
-func (b BuildingsServiceOp) Create(ctx context.Context, request *BuildingCreateRequest) (*Building, *Response, error) {
+func (b *BuildingsServiceOp) Create(ctx context.Context, request *BuildingCreateRequest) (*Building, *Response, error) {
 	if request == nil {
 		return nil, nil, NewArgError("createRequest", "cannot be nil")
 	}
@@ -156,7 +156,7 @@ func (b BuildingsServiceOp) Create(ctx context.Context, request *BuildingCreateR
 	return &building, resp, err
 }
 
-func (b BuildingsServiceOp) Update(ctx context.Context, i int, request *BuildingUpdateRequest) (*Building, *Response, error) {
+func (b *BuildingsServiceOp) Update(ctx context.Context, i int, request *BuildingUpdateRequest) (*Building, *Response, error) {
 	path := buildingsBasePath + "/" + strconv.Itoa(i)
 
 	if request == nil {
@@ -178,7 +178,7 @@ func (b BuildingsServiceOp) Update(ctx context.Context, i int, request *Building
 	return &building, resp, err
 }
 
-func (b BuildingsServiceOp) Delete(ctx context.Context, i int) (*Response, error) {
+func (b *BuildingsServiceOp) Delete(ctx context.Context, i int) (*Response, error) {
 	path := buildingsBasePath + "/" + strconv.Itoa(i)
 
 	req, err := b.client.NewRequest(ctx, http.MethodDelete, path, nil)
@@ -194,7 +194,7 @@ func (b BuildingsServiceOp) Delete(ctx context.Context, i int) (*Response, error
 	return resp, err
 }
 
-func (b BuildingsServiceOp) list(ctx context.Context) ([]Building, *Response, error) {
+func (b *BuildingsServiceOp) list(ctx context.Context) ([]Building, *Response, error) {
 	path := buildingsBasePath
 
 	req, err := b.client.NewRequest(ctx, http.MethodGet, path, nil)
@@ -211,7 +211,7 @@ func (b BuildingsServiceOp) list(ctx context.Context) ([]Building, *Response, er
 	return *buildingResponse.Buildings, resp, err
 }
 
-func (b BuildingsServiceOp) createBuildingFromCreationResponse(response BuildingCreateResponse, request BuildingCreateRequest) Building {
+func (b *BuildingsServiceOp) createBuildingFromCreationResponse(response BuildingCreateResponse, request BuildingCreateRequest) Building {
 	building := new(Building)
 	building.Id = response.Id
 	building.Href = response.Href
@@ -225,7 +225,7 @@ func (b BuildingsServiceOp) createBuildingFromCreationResponse(response Building
 	return *building
 }
 
-func (b BuildingsServiceOp) createBuildingFromUpdateResponse(response BuildingUpdateResponse, request BuildingUpdateRequest) Building {
+func (b *BuildingsServiceOp) createBuildingFromUpdateResponse(response BuildingUpdateResponse, request BuildingUpdateRequest) Building {
 	building := new(Building)
 	building.Id = &response.Id
 	building.Name = &request.Name
