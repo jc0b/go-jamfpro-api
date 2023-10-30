@@ -34,8 +34,9 @@ type Client struct {
 	client           *http.Client
 	HttpRetryTimeout time.Duration
 
-	Buildings  BuildingsService
-	Categories CategoriesService
+	Buildings   BuildingsService
+	Categories  CategoriesService
+	Departments DepartmentsService
 
 	// Option to specify extra headers like User-Agent
 	ExtraHeader map[string]string
@@ -92,6 +93,7 @@ func NewClient(clientId, clientSecret, instance string) (*Client, error) {
 
 	c.Buildings = &BuildingsServiceOp{client: c}
 	c.Categories = &CategoriesServiceOp{client: c}
+	c.Departments = &DepartmentsServiceOp{client: c}
 
 	if err := c.refreshAuthToken(); err != nil {
 		return c, errors.Wrap(err, "Error getting bearer auth token")
