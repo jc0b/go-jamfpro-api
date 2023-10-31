@@ -18,15 +18,14 @@ import (
 )
 
 const (
-	uriAuthToken  = "/api/v1/auth/token"
 	uriOAuthToken = "/api/oauth/token"
 )
 
 // Client ... stores an object to talk with Jamf API
 type Client struct {
-	username, password, clientId, clientSecret string
-	token                                      *string
-	tokenExpiration                            *time.Time
+	clientId, clientSecret string
+	token                  *string
+	tokenExpiration        *time.Time
 
 	instanceUrl *url.URL
 
@@ -36,13 +35,14 @@ type Client struct {
 
 	Buildings   BuildingsService
 	Categories  CategoriesService
+	Computers   ComputersService
 	Departments DepartmentsService
 
 	// Option to specify extra headers like User-Agent
 	ExtraHeader map[string]string
 }
 
-// Response is a Zentral response. This wraps the standard http.Response returned from Zentral.
+// Response is a Jamf Pro response. This wraps the standard http.Response returned from Jamf Pro.
 type Response struct {
 	*http.Response
 }
@@ -54,11 +54,6 @@ type ErrorResponse struct {
 
 	// Error message
 	Message string `json:"message"`
-}
-
-type responseAuthToken struct {
-	Token   *string    `json:"token,omitempty"`
-	Expires *time.Time `json:"expires,omitempty"`
 }
 
 type responseOAuthToken struct {
@@ -93,6 +88,7 @@ func NewClient(clientId, clientSecret, instance string) (*Client, error) {
 
 	c.Buildings = &BuildingsServiceOp{client: c}
 	c.Categories = &CategoriesServiceOp{client: c}
+	c.Computers = &ComputersServiceOp{client: c}
 	c.Departments = &DepartmentsServiceOp{client: c}
 
 	if err := c.refreshAuthToken(); err != nil {
@@ -139,14 +135,13 @@ func (c *Client) refreshAuthToken() error {
 	return nil
 }
 
-func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body interface{}) (*http.Request, error) {
+func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body interface{}, contentType string) (*http.Request, error) {
 	u, err := c.instanceUrl.Parse(urlStr)
 	if err != nil {
 		return nil, err
 	}
 
 	var request *http.Request
-	var mediaType string
 	switch method {
 	case http.MethodGet, http.MethodHead, http.MethodOptions:
 		request, err = http.NewRequest(method, u.String(), nil)
@@ -157,28 +152,29 @@ func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body int
 	default:
 		buf := new(bytes.Buffer)
 		if body != nil {
-			switch {
-			case strings.Contains(urlStr, "JSSResource"):
+			switch contentType {
+			case "application/xml":
 				err := xml.NewEncoder(buf).Encode(body)
 				if err != nil {
 					return nil, err
 				}
-				mediaType = "application/xml"
-			case strings.Contains(urlStr, uriOAuthToken):
+			case "application/x-www-form-urlencoded":
 				b, err := query.Values(body)
-
 				if err != nil {
 					return nil, err
 				}
-
 				buf = bytes.NewBufferString(b.Encode())
-				mediaType = "application/x-www-form-urlencoded"
+			case "application/json":
+				err = json.NewEncoder(buf).Encode(body)
+				if err != nil {
+					return nil, err
+				}
 			default:
 				err = json.NewEncoder(buf).Encode(body)
 				if err != nil {
 					return nil, err
 				}
-				mediaType = "application/json"
+				contentType = "application/json"
 			}
 		}
 
@@ -186,9 +182,11 @@ func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body int
 		if err != nil {
 			return nil, err
 		}
-		request.Header.Set("Content-Type", mediaType)
+		request.Header.Set("Content-Type", contentType)
 	}
 	request.Header.Set("Authorization", "Bearer "+*c.token)
+	//TODO: Maybe come back and fix this properly
+	request.Header.Set("Accept", "application/json")
 	return request, nil
 }
 

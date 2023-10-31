@@ -71,7 +71,7 @@ func (c *CategoriesServiceOp) List(ctx context.Context) ([]Category, *Response, 
 func (c *CategoriesServiceOp) GetByID(ctx context.Context, i int) (*Category, *Response, error) {
 	path := categoriesBasePath + "/" + strconv.Itoa(i)
 
-	req, err := c.client.NewRequest(ctx, http.MethodGet, path, nil)
+	req, err := c.client.NewRequest(ctx, http.MethodGet, path, nil, "application/json")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -117,7 +117,7 @@ func (c CategoriesServiceOp) Create(ctx context.Context, request *CategoryCreate
 		return nil, nil, NewArgError("createRequest", "cannot be nil")
 	}
 
-	req, err := c.client.NewRequest(ctx, http.MethodPost, categoriesBasePath, request)
+	req, err := c.client.NewRequest(ctx, http.MethodPost, categoriesBasePath, request, "application/json")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -143,7 +143,7 @@ func (c *CategoriesServiceOp) Update(ctx context.Context, i int, request *Catego
 		return nil, nil, NewArgError("createRequest", "cannot be nil")
 	}
 
-	req, err := c.client.NewRequest(ctx, http.MethodPut, path, request)
+	req, err := c.client.NewRequest(ctx, http.MethodPut, path, request, "application/json")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -161,7 +161,7 @@ func (c *CategoriesServiceOp) Update(ctx context.Context, i int, request *Catego
 func (c *CategoriesServiceOp) Delete(ctx context.Context, i int) (*Response, error) {
 	path := categoriesBasePath + "/" + strconv.Itoa(i)
 
-	req, err := c.client.NewRequest(ctx, http.MethodDelete, path, nil)
+	req, err := c.client.NewRequest(ctx, http.MethodDelete, path, nil, "application/json")
 	if err != nil {
 		return nil, err
 	}
@@ -176,7 +176,7 @@ func (c *CategoriesServiceOp) Delete(ctx context.Context, i int) (*Response, err
 
 func (c *CategoriesServiceOp) list(ctx context.Context) ([]Category, *Response, error) {
 	path := categoriesBasePath
-	req, err := c.client.NewRequest(ctx, http.MethodGet, path, nil)
+	req, err := c.client.NewRequest(ctx, http.MethodGet, path, nil, "application/json")
 	if err != nil {
 		return nil, nil, err
 	}

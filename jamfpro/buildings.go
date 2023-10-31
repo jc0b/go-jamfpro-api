@@ -91,7 +91,7 @@ func (b *BuildingsServiceOp) List(ctx context.Context) ([]Building, *Response, e
 func (b *BuildingsServiceOp) GetByID(ctx context.Context, i int) (*Building, *Response, error) {
 	path := buildingsBasePath + "/" + strconv.Itoa(i)
 
-	req, err := b.client.NewRequest(ctx, http.MethodGet, path, nil)
+	req, err := b.client.NewRequest(ctx, http.MethodGet, path, nil, "application/json")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -137,7 +137,7 @@ func (b *BuildingsServiceOp) Create(ctx context.Context, request *BuildingCreate
 		return nil, nil, NewArgError("createRequest", "cannot be nil")
 	}
 
-	req, err := b.client.NewRequest(ctx, http.MethodPost, buildingsBasePath, request)
+	req, err := b.client.NewRequest(ctx, http.MethodPost, buildingsBasePath, request, "application/json")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -163,7 +163,7 @@ func (b *BuildingsServiceOp) Update(ctx context.Context, i int, request *Buildin
 		return nil, nil, NewArgError("createRequest", "cannot be nil")
 	}
 
-	req, err := b.client.NewRequest(ctx, http.MethodPut, path, request)
+	req, err := b.client.NewRequest(ctx, http.MethodPut, path, request, "application/json")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -181,7 +181,7 @@ func (b *BuildingsServiceOp) Update(ctx context.Context, i int, request *Buildin
 func (b *BuildingsServiceOp) Delete(ctx context.Context, i int) (*Response, error) {
 	path := buildingsBasePath + "/" + strconv.Itoa(i)
 
-	req, err := b.client.NewRequest(ctx, http.MethodDelete, path, nil)
+	req, err := b.client.NewRequest(ctx, http.MethodDelete, path, nil, "application/json")
 	if err != nil {
 		return nil, err
 	}
@@ -197,7 +197,7 @@ func (b *BuildingsServiceOp) Delete(ctx context.Context, i int) (*Response, erro
 func (b *BuildingsServiceOp) list(ctx context.Context) ([]Building, *Response, error) {
 	path := buildingsBasePath
 
-	req, err := b.client.NewRequest(ctx, http.MethodGet, path, nil)
+	req, err := b.client.NewRequest(ctx, http.MethodGet, path, nil, "application/json")
 	if err != nil {
 		return nil, nil, err
 	}
