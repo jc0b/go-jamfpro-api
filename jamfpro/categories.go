@@ -138,9 +138,10 @@ func (c CategoriesServiceOp) Create(ctx context.Context, request *CategoryCreate
 
 func (c *CategoriesServiceOp) Update(ctx context.Context, i int, request *CategoryUpdateRequest) (*Category, *Response, error) {
 	path := categoriesBasePath + "/" + strconv.Itoa(i)
-
 	if request == nil {
-		return nil, nil, NewArgError("createRequest", "cannot be nil")
+		return nil, nil, NewArgError("updateRequest", "cannot be nil")
+	} else if i == 0 {
+		return nil, nil, NewArgError("category ID", "cannot be 0")
 	}
 
 	req, err := c.client.NewRequest(ctx, http.MethodPut, path, request, "application/json")

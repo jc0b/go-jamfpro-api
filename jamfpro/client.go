@@ -33,10 +33,11 @@ type Client struct {
 	client           *http.Client
 	HttpRetryTimeout time.Duration
 
-	Buildings   BuildingsService
-	Categories  CategoriesService
-	Computers   ComputersService
-	Departments DepartmentsService
+	Buildings      BuildingsService
+	Categories     CategoriesService
+	Computers      ComputersService
+	ComputerGroups ComputerGroupsService
+	Departments    DepartmentsService
 
 	// Option to specify extra headers like User-Agent
 	ExtraHeader map[string]string
@@ -89,6 +90,7 @@ func NewClient(clientId, clientSecret, instance string) (*Client, error) {
 	c.Buildings = &BuildingsServiceOp{client: c}
 	c.Categories = &CategoriesServiceOp{client: c}
 	c.Computers = &ComputersServiceOp{client: c}
+	c.ComputerGroups = &ComputerGroupsServiceOp{client: c}
 	c.Departments = &DepartmentsServiceOp{client: c}
 
 	if err := c.refreshAuthToken(); err != nil {
@@ -184,9 +186,11 @@ func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body int
 		}
 		request.Header.Set("Content-Type", contentType)
 	}
+	if contentType != "application/xml" {
+		request.Header.Set("Accept", "application/json")
+	}
 	request.Header.Set("Authorization", "Bearer "+*c.token)
-	//TODO: Maybe come back and fix this properly
-	request.Header.Set("Accept", "application/json")
+
 	return request, nil
 }
 
@@ -236,10 +240,14 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) (*Res
 			if err != nil {
 				return nil, err
 			}
+		} else if strings.Contains(resp.Header.Get("Content-Type"), "xml") {
+			err = xml.NewDecoder(resp.Body).Decode(v)
+			if err != nil {
+				return nil, err
+			}
 		} else {
 			err = json.NewDecoder(resp.Body).Decode(v)
 			if err != nil {
-				println("Blah")
 				return nil, err
 			}
 		}

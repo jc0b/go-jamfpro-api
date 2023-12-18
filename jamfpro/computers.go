@@ -25,9 +25,10 @@ var _ ComputersService = &ComputersServiceOp{}
 
 // Computer represents a Jamf Pro Computer
 type Computer struct {
-	Id      int             `json:"id"`
-	Name    string          `json:"name"`
-	General ComputerGeneral `json:"general,omitempty"`
+	Id           int             `json:"id" xml:"id"`
+	Name         string          `json:"name" xml:"name"`
+	General      ComputerGeneral `json:"general,omitempty" xml:"-"`
+	SerialNumber string          `json:"serial_number,omitempty" xml:"serial_number"`
 }
 
 type ComputerGeneral struct {
@@ -67,6 +68,8 @@ func (c *ComputersServiceOp) GetByID(ctx context.Context, Id int) (*Computer, *R
 	}
 
 	computerResponse.Computer.Id = computerResponse.Computer.General.Id
+	computerResponse.Computer.Name = computerResponse.Computer.General.Name
+	computerResponse.Computer.SerialNumber = computerResponse.Computer.General.SerialNumber
 
 	return &computerResponse.Computer, resp, err
 }
@@ -95,6 +98,8 @@ func (c *ComputersServiceOp) GetByName(ctx context.Context, computerName string)
 	}
 
 	computer.Id = computer.General.Id
+	computer.Name = computer.General.Name
+	computer.SerialNumber = computer.General.SerialNumber
 
 	return computer, resp, err
 }
@@ -113,6 +118,8 @@ func (c *ComputersServiceOp) GetBySerialNumber(ctx context.Context, serialNumber
 	}
 
 	computerResponse.Computer.Id = computerResponse.Computer.General.Id
+	computerResponse.Computer.Name = computerResponse.Computer.General.Name
+	computerResponse.Computer.SerialNumber = computerResponse.Computer.General.SerialNumber
 
 	return &computerResponse.Computer, resp, err
 }
