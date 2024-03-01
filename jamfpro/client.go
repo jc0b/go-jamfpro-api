@@ -26,6 +26,8 @@ type Client struct {
 	clientId, clientSecret string
 	token                  *string
 	tokenExpiration        *time.Time
+	apBalanceId            string
+	jamfProIngress         string
 
 	instanceUrl *url.URL
 
@@ -71,7 +73,9 @@ type FormOptions struct {
 }
 
 // NewClient ... returns a new jamf.Client which can be used to access the API using the new bearer tokens
-func NewClient(clientId, clientSecret, instance string) (*Client, error) {
+func NewClient(clientId, clientSecret, instance string, sessionToken string) (*Client, error) {
+	fmt.Println("Instantiated new API client")
+
 	instanceUrl, err := url.Parse(instance)
 
 	if err != nil {
@@ -93,11 +97,25 @@ func NewClient(clientId, clientSecret, instance string) (*Client, error) {
 	c.ComputerGroups = &ComputerGroupsServiceOp{client: c}
 	c.Departments = &DepartmentsServiceOp{client: c}
 
+	if sessionToken != "" {
+		c.apBalanceId = sessionToken
+		c.jamfProIngress = sessionToken
+	}
+
 	if err := c.refreshAuthToken(); err != nil {
 		return c, errors.Wrap(err, "Error getting bearer auth token")
 	}
 
 	return c, nil
+}
+
+func (c *Client) GetSessionToken() string {
+	if c.apBalanceId != "" {
+		return c.apBalanceId
+	} else if c.jamfProIngress != "" {
+		return c.jamfProIngress
+	}
+	return ""
 }
 
 func (c *Client) refreshAuthToken() error {
@@ -126,6 +144,18 @@ func (c *Client) refreshAuthToken() error {
 	}
 
 	defer resp.Body.Close()
+
+	// Try and grab the instance within the cluster we're talking to to avoid replication lag
+	for i := 0; i < len(resp.Cookies()); i++ {
+		if resp.Cookies()[i].Name == "jpro-ingress" && c.jamfProIngress == "" {
+			c.jamfProIngress = resp.Cookies()[i].Value
+			break
+		} else if resp.Cookies()[i].Name == "APBALANCEID" && c.apBalanceId == "" {
+			c.apBalanceId = resp.Cookies()[i].Value
+			break
+		}
+	}
+
 	decodeErr := json.NewDecoder(resp.Body).Decode(&out)
 	if decodeErr != nil {
 		return nil
@@ -189,6 +219,14 @@ func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body int
 	if contentType != "application/xml" {
 		request.Header.Set("Accept", "application/json")
 	}
+	if c.jamfProIngress != "" {
+		jamfProIngressCookie := &http.Cookie{Name: "jpro-ingress", Value: c.jamfProIngress, HttpOnly: false}
+		request.AddCookie(jamfProIngressCookie)
+	} else if c.apBalanceId != "" {
+		apBalanceIdCookie := &http.Cookie{Name: "APBALANCEID", Value: c.apBalanceId, HttpOnly: false}
+		request.AddCookie(apBalanceIdCookie)
+	}
+
 	request.Header.Set("Authorization", "Bearer "+*c.token)
 
 	return request, nil

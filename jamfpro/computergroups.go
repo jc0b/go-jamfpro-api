@@ -3,6 +3,7 @@ package jamfpro
 import (
 	"context"
 	"encoding/xml"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -67,7 +68,9 @@ type ComputerGroupListResponse struct {
 	ComputerGroups *[]ComputerGroup `json:"computer_groups"`
 }
 
+// Create creates a ComputerGroup record in Jamf Pro.
 func (c *ComputerGroupsServiceOp) Create(ctx context.Context, request *ComputerGroupRequest) (*ComputerGroup, *Response, error) {
+	fmt.Println("Creating a new computer group")
 	path := computerGroupsBasePath + "/id/0"
 	if request == nil {
 		return nil, nil, NewArgError("createRequest", "cannot be nil")
@@ -95,18 +98,20 @@ func (c *ComputerGroupsServiceOp) Create(ctx context.Context, request *ComputerG
 	// Below, we are attempting to work around Jamf Pro replication lag. It may take a while for the API changes to
 	// actually take place on the server, so we wait until the API shows us it has happened.
 	intendedComputerGroup := c.createComputerGroupFromRequest(*request)
-	updatedComputerGroup, resp, err := c.client.ComputerGroups.GetByID(ctx, computerGroupCreation.Id)
+	createdComputerGroup, resp, err := c.client.ComputerGroups.GetByID(ctx, computerGroupCreation.Id)
 	interval := 1
-	for resp.StatusCode != http.StatusOK && !AreGroupsEquivalent(&intendedComputerGroup, updatedComputerGroup) {
+	for resp.StatusCode != http.StatusOK && !AreGroupsEquivalent(&intendedComputerGroup, createdComputerGroup) {
 		time.Sleep(time.Duration(interval) * time.Second)
-		updatedComputerGroup, resp, err = c.client.ComputerGroups.GetByID(ctx, computerGroupCreation.Id)
+		createdComputerGroup, resp, err = c.client.ComputerGroups.GetByID(ctx, computerGroupCreation.Id)
 		interval = interval * 2
 	}
 	computerGroup := c.createComputerGroupFromResponse(*computerGroupCreation, *request)
 	return &computerGroup, resp, err
 }
 
+// Update updates a ComputerGroup record in Jamf Pro.
 func (c *ComputerGroupsServiceOp) Update(ctx context.Context, i int, request *ComputerGroupRequest) (*ComputerGroup, *Response, error) {
+	fmt.Println("Updating a computer group")
 	path := computerGroupsBasePath + "/id/" + strconv.Itoa(i)
 	if request == nil {
 		return nil, nil, NewArgError("createRequest", "cannot be nil")
@@ -150,6 +155,7 @@ func (c *ComputerGroupsServiceOp) Update(ctx context.Context, i int, request *Co
 }
 
 func (c *ComputerGroupsServiceOp) Delete(ctx context.Context, i int) (*Response, error) {
+	fmt.Println("Deleting a computer group")
 	path := computerGroupsBasePath + "/id/" + strconv.Itoa(i)
 
 	req, err := c.client.NewRequest(ctx, http.MethodDelete, path, nil, "application/xml")
@@ -158,12 +164,26 @@ func (c *ComputerGroupsServiceOp) Delete(ctx context.Context, i int) (*Response,
 		return nil, err
 	}
 
-	resp, err := c.client.Do(ctx, req, nil)
-	if err != nil && err.Error() != "EOF" {
-		return resp, err
+	deletionResp, deletionErr := c.client.Do(ctx, req, nil)
+	if deletionErr != nil && deletionErr.Error() != "EOF" {
+		return deletionResp, deletionErr
 	}
 
-	return resp, err
+	_, resp, err := c.client.ComputerGroups.GetByID(ctx, i)
+	interval := 1
+	limit := 5
+	for resp.StatusCode != http.StatusNotFound && limit > 0 {
+		time.Sleep(time.Duration(interval) * time.Second)
+		_, resp, err = c.client.ComputerGroups.GetByID(ctx, i)
+		interval = interval * 2
+		limit = limit - 1
+	}
+
+	if limit == 0 {
+		return nil, fmt.Errorf("failed to delete computer group with id %d after 5 attempts", i)
+	}
+
+	return deletionResp, deletionErr
 
 }
 
@@ -172,6 +192,7 @@ func (c *ComputerGroupsServiceOp) List(ctx context.Context) ([]ComputerGroup, *R
 }
 
 func (c *ComputerGroupsServiceOp) GetByID(ctx context.Context, Id int) (*ComputerGroup, *Response, error) {
+	fmt.Println("Getting a computer group by ID")
 	path := computerGroupsBasePath + "/id/" + strconv.Itoa(Id)
 
 	req, err := c.client.NewRequest(ctx, http.MethodGet, path, nil, "application/xml")
@@ -195,6 +216,7 @@ func (c *ComputerGroupsServiceOp) GetByID(ctx context.Context, Id int) (*Compute
 }
 
 func (c *ComputerGroupsServiceOp) GetByName(ctx context.Context, computerGroupName string) (*ComputerGroup, *Response, error) {
+	fmt.Println("Getting a computer group by name")
 	computerGroups, _, err := c.list(ctx)
 	var id int
 	if err != nil {
@@ -221,6 +243,7 @@ func (c *ComputerGroupsServiceOp) GetByName(ctx context.Context, computerGroupNa
 }
 
 func (c *ComputerGroupsServiceOp) list(ctx context.Context) ([]ComputerGroup, *Response, error) {
+	fmt.Println("Listing computer groups")
 	path := computerGroupsBasePath
 	req, err := c.client.NewRequest(ctx, http.MethodGet, path, nil, "application/json")
 	if err != nil {

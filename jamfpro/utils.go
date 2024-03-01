@@ -24,3 +24,20 @@ func AreGroupsEquivalent(planned, actual *ComputerGroup) bool {
 
 	return true
 }
+
+func AreComputerRecordsEquivalent(planned, actual *Computer) bool {
+	if actual == nil {
+		return false
+	}
+
+	if planned.Name != actual.Name {
+		return false
+	}
+	if planned.Id != actual.Id {
+		return false
+	}
+	if planned.SerialNumber != actual.SerialNumber {
+		return false
+	}
+	return true
+}
