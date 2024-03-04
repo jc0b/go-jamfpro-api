@@ -35,6 +35,7 @@ type Client struct {
 	client           *http.Client
 	HttpRetryTimeout time.Duration
 
+	ApiRoles       ApiRolesService
 	Buildings      BuildingsService
 	Categories     CategoriesService
 	Computers      ComputersService
@@ -91,6 +92,7 @@ func NewClient(clientId, clientSecret, instance string, sessionToken string) (*C
 		ExtraHeader:      make(map[string]string),
 	}
 
+	c.ApiRoles = &ApiRolesServiceOp{client: c}
 	c.Buildings = &BuildingsServiceOp{client: c}
 	c.Categories = &CategoriesServiceOp{client: c}
 	c.Computers = &ComputersServiceOp{client: c}
