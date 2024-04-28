@@ -70,7 +70,6 @@ type ComputerGroupListResponse struct {
 
 // Create creates a ComputerGroup record in Jamf Pro.
 func (c *ComputerGroupsServiceOp) Create(ctx context.Context, request *ComputerGroupRequest) (*ComputerGroup, *Response, error) {
-	fmt.Println("Creating a new computer group")
 	path := computerGroupsBasePath + "/id/0"
 	if request == nil {
 		return nil, nil, NewArgError("createRequest", "cannot be nil")
@@ -111,7 +110,6 @@ func (c *ComputerGroupsServiceOp) Create(ctx context.Context, request *ComputerG
 
 // Update updates a ComputerGroup record in Jamf Pro.
 func (c *ComputerGroupsServiceOp) Update(ctx context.Context, i int, request *ComputerGroupRequest) (*ComputerGroup, *Response, error) {
-	fmt.Println("Updating a computer group")
 	path := computerGroupsBasePath + "/id/" + strconv.Itoa(i)
 	if request == nil {
 		return nil, nil, NewArgError("createRequest", "cannot be nil")
@@ -155,7 +153,6 @@ func (c *ComputerGroupsServiceOp) Update(ctx context.Context, i int, request *Co
 }
 
 func (c *ComputerGroupsServiceOp) Delete(ctx context.Context, i int) (*Response, error) {
-	fmt.Println("Deleting a computer group")
 	path := computerGroupsBasePath + "/id/" + strconv.Itoa(i)
 
 	req, err := c.client.NewRequest(ctx, http.MethodDelete, path, nil, "application/xml")
@@ -192,7 +189,6 @@ func (c *ComputerGroupsServiceOp) List(ctx context.Context) ([]ComputerGroup, *R
 }
 
 func (c *ComputerGroupsServiceOp) GetByID(ctx context.Context, Id int) (*ComputerGroup, *Response, error) {
-	fmt.Println("Getting a computer group by ID")
 	path := computerGroupsBasePath + "/id/" + strconv.Itoa(Id)
 
 	req, err := c.client.NewRequest(ctx, http.MethodGet, path, nil, "application/xml")
@@ -216,7 +212,6 @@ func (c *ComputerGroupsServiceOp) GetByID(ctx context.Context, Id int) (*Compute
 }
 
 func (c *ComputerGroupsServiceOp) GetByName(ctx context.Context, computerGroupName string) (*ComputerGroup, *Response, error) {
-	fmt.Println("Getting a computer group by name")
 	computerGroups, _, err := c.list(ctx)
 	var id int
 	if err != nil {
@@ -243,7 +238,6 @@ func (c *ComputerGroupsServiceOp) GetByName(ctx context.Context, computerGroupNa
 }
 
 func (c *ComputerGroupsServiceOp) list(ctx context.Context) ([]ComputerGroup, *Response, error) {
-	fmt.Println("Listing computer groups")
 	path := computerGroupsBasePath
 	req, err := c.client.NewRequest(ctx, http.MethodGet, path, nil, "application/json")
 	if err != nil {

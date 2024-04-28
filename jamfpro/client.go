@@ -75,7 +75,6 @@ type FormOptions struct {
 
 // NewClient ... returns a new jamf.Client which can be used to access the API using the new bearer tokens
 func NewClient(clientId, clientSecret, instance string, sessionToken string) (*Client, error) {
-	fmt.Println("Instantiated new API client")
 
 	instanceUrl, err := url.Parse(instance)
 
